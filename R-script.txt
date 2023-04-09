@@ -1,0 +1,80 @@
+#Script for analyses in Friberg, Lehmann, Wiklund, Animal Behavior 2023.
+
+#Loading of packages
+library(car)
+library(effects)
+library(lme4)
+
+#Loading of datasets 
+
+#Dataset 1: Only diapausers
+dat1<-read.delim("dataset1.txt")
+
+#Dataset 2: All individuals
+dat2<-read.delim("dataset2.txt")
+
+#Dataset 3: Only non-survivors
+dat3<-read.delim("dataset3.txt")
+
+#Dataset 4: Metabolism dataset
+dat4<-read.delim("dataset4.txt")
+
+#Dataset 5: Metabolism only Aglais
+dat5<-read.delim("dataset5.txt")
+
+#Testing whether winter survival depended on mass increase after adult eclosion
+str(dat1)
+mod1a<-glm(Survival~MassChangeStd*Species*Sex,family=binomial, data=dat1)
+summary(mod1a)
+Anova(mod1a)
+
+#to generate means and 95% confidence intervals for figure 1a and b in manuscript
+mod1b<-lm(MassChangeStd~WinterDestiny*Species*Sex, data=dat1)
+Anova(mod1b)
+ef<-effect("WinterDestiny:Species:Sex", mod1b)
+summary(ef)
+
+#Testing if species set for diapause are increasing more in mass after eclosion than directly developing species
+
+mod2a<-lmer(MassChange10days~StdEcloseMass+Strategy*Sex+(1|Species), data=dat2)
+summary(mod2a)
+Anova(mod2a)
+
+#To generate mean and confidence interval for Figure 1c
+
+ef<-effect("Strategy:Sex", mod2a)
+summary(ef)
+
+#To test the effect of early life mass change on winter lifespan (including only individuals that did not survive the experiment). Data underlying figure 2.
+str(dat3)
+mod3a<-lm(Lifespan_Winter~Species*PropMassChange, data=dat3)
+summary(mod3a)
+Anova(mod3a)
+
+#To test wether the daily winter mass loss differed between survivors and non-survivors in diapausing species
+mod4a<-lm(Daily_Mass_Loss ~StdEcloseMass+WinterDestiny*Species*Sex, data=dat1)
+summary(mod4a)
+Anova(mod4a)
+
+#to generate means and 95% confidence intervals for figure 3a and b in manuscript
+
+ef<-effect("WinterDestiny:Species:sex", mod5)
+summary(ef)
+
+#Testing if species set for diapause are decreasing less in weight on a daily basis in winter conditions
+str(dat2)
+mod5a<-lmer(Daily_Mass_Loss ~StdEcloseMass+Strategy*Sex+ (1|Species), data=dat2)
+summary(mod5a)
+Anova(mod5a)
+
+#To generate mean and confidence interval for Figure 3c
+ef<-effect("Strategy", mod5a)
+summary(ef)
+summary(mod5a)
+
+#To test whether diapausing Aglais urticae/Aglais io and direct developing migratory Vanessa atalanta and Vanessa cardui differed in resting metabolism during winter conditions.
+t.test(dat4$CO2_mL_h_mg[1:8], dat4$CO2_mL_h_mg[9:18])
+
+#To test whether there is a difference in metabolism between the two Aglais species
+
+kruskal.test(CO2_mL_h_mg  ~ Species, data = dat5)
